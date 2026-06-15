@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Context Harvester — Multi-Tab LLM Context Builder</title>
+    <meta name="description" content="Collect, organize, and export content from multiple browser tabs as structured, token-aware prompts for LLMs. Chrome + Firefox extension.">
+    <meta name="keywords" content="browser extension, chrome extension, firefox addon, LLM, AI, context builder, token counter, developer tools, prompt engineering">
+    <meta name="author" content="Rishap Gandhi">
+    <meta property="og:title" content="Context Harvester — Multi-Tab LLM Context Builder">
+    <meta property="og:description" content="Stop copy-pasting from 5+ tabs. Collect context with one click, see token counts, export as structured prompts.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://rishapgandhi.github.io/context-harvester/">
+    <link rel="canonical" href="https://rishapgandhi.github.io/context-harvester/">
+    <style>
+        :root {
+            --accent: #22c55e;
+            --accent-dark: #15803d;
+            --black: #000000;
+            --text-main: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --text-body: rgba(255, 255, 255, 0.65);
+            --border: rgba(34, 197, 94, 0.1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--black); color: var(--text-main); line-height: 1.6; }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        nav { position: fixed; top: 0; width: 100%; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 100; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); }
+        .nav-logo { color: var(--accent); font-weight: 700; letter-spacing: 0.05em; font-size: 18px; }
+        .nav-links { display: flex; gap: 24px; }
+        .nav-links a { color: white; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px; background: radial-gradient(ellipse at center, rgba(34,197,94,0.06) 0%, transparent 60%); }
+        .emblem { width: 70px; height: 70px; border: 2px solid var(--accent); border-radius: 50%; margin-bottom: 24px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 24px; box-shadow: 0 0 40px rgba(34,197,94,0.15); }
+        .hero h1 { font-size: clamp(36px, 6vw, 56px); font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 16px; }
+        .hero p { font-size: 16px; color: var(--text-body); max-width: 50ch; margin: 0 auto 24px; }
+        .badges { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-bottom: 24px; }
+        .badge { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; font-size: 11px; color: var(--text-muted); }
+        .btn-primary { background: var(--accent); color: #000; padding: 12px 28px; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; border-radius: 4px; display: inline-block; transition: background 0.2s; }
+        .btn-primary:hover { background: #4ade80; text-decoration: none; }
+        .btn-ghost { border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 12px 28px; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; border-radius: 4px; display: inline-block; transition: border-color 0.2s; }
+        .btn-ghost:hover { border-color: var(--accent); text-decoration: none; }
+        .hero-buttons { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+
+        .stats { background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%); }
+        .stats-grid { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); }
+        .stat { text-align: center; padding: 40px 20px; border-right: 1px solid rgba(0,0,0,0.15); }
+        .stat:last-child { border: none; }
+        .stat-num { font-size: 42px; font-weight: 700; }
+        .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(0,0,0,0.6); margin-top: 4px; }
+
+        .section { padding: 80px 40px; }
+        .section-title { text-align: center; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 12px; }
+        .section h2 { text-align: center; font-size: 32px; font-weight: 500; margin-bottom: 48px; }
+        .red-line { width: 50px; height: 3px; background: var(--accent); margin: 0 auto 20px; }
+
+        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 1000px; margin: 0 auto; }
+        .feature { padding: 28px; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.02); }
+        .feature h3 { font-size: 16px; margin-bottom: 8px; }
+        .feature p { font-size: 14px; color: var(--text-body); }
+
+        .install { background: linear-gradient(180deg, #0a0a0a 0%, #050f05 100%); text-align: center; }
+        .install code { display: block; background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 16px 24px; border-radius: 8px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 14px; max-width: 600px; margin: 0 auto 24px; color: var(--accent); }
+
+        .cta { background: var(--accent); text-align: center; padding: 60px 40px; }
+        .cta h2 { color: #000; font-size: 28px; margin-bottom: 12px; }
+        .cta p { color: rgba(0,0,0,0.6); margin-bottom: 20px; }
+        .btn-dark { background: #000; color: #fff; padding: 12px 28px; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; border-radius: 4px; display: inline-block; }
+
+        footer { padding: 60px 40px; border-top: 1px solid var(--border); text-align: center; }
+        footer p { font-size: 11px; color: var(--text-muted); }
+
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat { border-right: none; border-bottom: 1px solid rgba(0,0,0,0.15); }
+            nav { padding: 16px 20px; }
+            .section { padding: 60px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-logo">CONTEXT HARVESTER</div>
+    <div class="nav-links">
+        <a href="https://github.com/rishapgandhi/context-harvester">GitHub</a>
+        <a href="https://github.com/rishapgandhi/context-harvester/wiki">Wiki</a>
+        <a href="https://github.com/rishapgandhi/context-harvester/discussions">Discuss</a>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="emblem">CH</div>
+    <h1>Multi-Tab Context<br>Builder for LLMs</h1>
+    <p>Stop copy-pasting from 5+ tabs. Collect context from any page with one click, track token usage, export as structured prompts.</p>
+    <div class="badges">
+        <span class="badge">Chrome MV3</span>
+        <span class="badge">Firefox</span>
+        <span class="badge">MIT License</span>
+        <span class="badge">TypeScript</span>
+    </div>
+    <div class="hero-buttons">
+        <a href="https://github.com/rishapgandhi/context-harvester" class="btn-primary">GitHub Repo</a>
+        <a href="https://github.com/rishapgandhi/context-harvester/wiki" class="btn-ghost">Documentation</a>
+    </div>
+</section>
+
+<section class="stats">
+    <div class="stats-grid">
+        <div class="stat"><div class="stat-num">3</div><div class="stat-label">Export Formats</div></div>
+        <div class="stat"><div class="stat-num">3</div><div class="stat-label">Model Targets</div></div>
+        <div class="stat"><div class="stat-num">2</div><div class="stat-label">Browsers</div></div>
+        <div class="stat"><div class="stat-num">∞</div><div class="stat-label">Snippets</div></div>
+    </div>
+</section>
+
+<section class="section" style="background: linear-gradient(180deg, #000 0%, #050f05 100%);">
+    <div class="red-line"></div>
+    <div class="section-title">Capabilities</div>
+    <h2>Collect. Organize. Export.</h2>
+    <div class="features">
+        <div class="feature">
+            <h3>🖱️ One-Click Capture</h3>
+            <p>Right-click any selected text or press Alt+C. Source URL, page title, and timestamp captured automatically.</p>
+        </div>
+        <div class="feature">
+            <h3>📊 Token Awareness</h3>
+            <p>Real-time token counter with model selector — GPT-4 (128k), Claude (200k), Gemini (1M). Never exceed limits.</p>
+        </div>
+        <div class="feature">
+            <h3>🏷️ Smart Tagging</h3>
+            <p>Auto-detects content type: code, docs, error, discussion, reference. Organize context intuitively.</p>
+        </div>
+        <div class="feature">
+            <h3>↕️ Drag to Reorder</h3>
+            <p>Arrange snippets in the order that makes sense for your prompt. Priority context first.</p>
+        </div>
+        <div class="feature">
+            <h3>📤 Structured Export</h3>
+            <p>Export as Markdown with attribution, XML structured prompt, or raw JSON. Copy to clipboard instantly.</p>
+        </div>
+        <div class="feature">
+            <h3>🌐 Cross-Browser</h3>
+            <p>Built with WXT framework. Works on Chrome, Firefox, and Edge with a single codebase.</p>
+        </div>
+    </div>
+</section>
+
+<section class="section install">
+    <div class="section-title">Quick Start</div>
+    <h2>One command install</h2>
+    <code>git clone https://github.com/rishapgandhi/context-harvester && cd context-harvester && npm install && npm run dev</code>
+    <p style="color: var(--text-muted); font-size: 13px;">Works with Chrome · Firefox · Edge</p>
+</section>
+
+<section class="cta">
+    <h2>Build Better Prompts, Faster</h2>
+    <p>Join the developers who stopped copy-pasting between tabs.</p>
+    <a href="https://github.com/rishapgandhi/context-harvester" class="btn-dark">Get Started</a>
+</section>
+
+<footer>
+    <p>Built by <a href="https://github.com/rishapgandhi">Rishap Gandhi</a> · MIT License</p>
+</footer>
+
+</body>
+</html>
