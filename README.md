@@ -3,8 +3,15 @@
 > Multi-tab LLM context builder — collect, organize, and export content from multiple browser tabs as structured, token-aware prompts.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-blue.svg)](https://developer.chrome.com/docs/extensions/mv3/)
-[![Firefox](https://img.shields.io/badge/Firefox-MV2%2B-orange.svg)](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions)
+[![Chrome Web Store](https://img.shields.io/badge/Chrome-Install-blue?logo=googlechrome)](https://chromewebstore.google.com/detail/context-harvester/jkcccdoifdagjiboeikoeapceaccbfna)
+[![Firefox Add-ons](https://img.shields.io/badge/Firefox-Install-orange?logo=firefox)](https://addons.mozilla.org/en-US/firefox/addon/context-harvester/)
+
+## Install
+
+| Browser | Link |
+|---------|------|
+| Chrome / Edge | [Install from Chrome Web Store](https://chromewebstore.google.com/detail/context-harvester/jkcccdoifdagjiboeikoeapceaccbfna) |
+| Firefox | [Install from Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/context-harvester/) |
 
 ## The Problem
 
